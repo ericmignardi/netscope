@@ -44,7 +44,7 @@ def trace(target: str):
         print(f"{i}: {reply.src} | Duration: {(reply.time - pkt.sent_time) * 1000}")
 
         if reply.src == target:
-            print("Destination reched!")
+            print("Destination reached!")
             break
 
 # ==========================================
