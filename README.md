@@ -8,8 +8,8 @@ A real-time network topology mapper and analyzer for your terminal. Discover dev
 
 - **Device Discovery**: ARP-scans the local subnet to identify active hosts, outputting IP and MAC address pairs.
 - **Route Tracing**: Measures hop-by-hop latency to target hosts using custom ICMP/IP packets.
-- **Terminal UI**: Live, interactive dashboard to visualize network state. _(In development)_
-- **Traffic Monitoring**: Passively sniffs packets to detect anomalies like port scans. _(In development)_
+- **Terminal UI**: Live, interactive dashboard to visualize network state and scan progress.
+- **Traffic Monitoring**: Passively sniffs packets to detect anomalies like SYN port scans.
 
 ## Tech Stack
 
@@ -53,6 +53,12 @@ uv run main.py scan
 
 ```bash
 uv run main.py trace <target_ip_or_domain>
+```
+
+**Launch the Interactive Dashboard (Day 3+4):**
+
+```bash
+uv run main.py ui
 ```
 
 ---
