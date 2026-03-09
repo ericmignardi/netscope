@@ -15,6 +15,10 @@ destination_subnet = "192.168.1.0/24"
 # ==========================================
 @app.command()
 def scan():
+    """
+    Discover devices on the local network via ARP scanning.
+    Sends an ARP request to the broadcast MAC address and prints responses.
+    """
     print("Running scan...")
 
     eth = Ether(dst="ff:ff:ff:ff:ff:ff") / ARP(pdst=destination_subnet)
@@ -32,6 +36,10 @@ def scan():
 # ==========================================
 @app.command()
 def trace(target: str):
+    """
+    Perform a traceroute to the specified target host.
+    Sends ICMP echo requests with incrementing TTLs to map the network path.
+    """
     for i in range(1, 30):
         print("Running trace...")
 
@@ -54,6 +62,11 @@ def trace(target: str):
 # DAY 3: Textual UI (Dashboard)
 # ==========================================
 class NetscopeApp(App):
+    """
+    Terminal UI Application for netscope.
+    Provides a real-time dashboard for device discovery, route tracing, and monitoring.
+    """
+
     CSS = """
     #sidebar {
         width: 40%;
@@ -63,6 +76,10 @@ class NetscopeApp(App):
 
     @work(exclusive=True, thread=True)
     def run_scan(self):
+        """
+        Background worker thread for ARP scanning.
+        Discovers devices without blocking the UI and updates the DataTable.
+        """
         eth = Ether(dst="ff:ff:ff:ff:ff:ff") / ARP(pdst=destination_subnet)
 
         answered, unanswered = srp(eth, timeout=2, verbose=0)
@@ -72,6 +89,10 @@ class NetscopeApp(App):
 
     @work(exclusive=True, thread=True)
     def run_trace(self, target: str):
+        """
+        Background worker thread for route tracing.
+        Pings the target with incrementing TTLs and updates the RichLog.
+        """
         for i in range(1, 30):
             pkt = IP(dst=target, ttl=i) / ICMP()
 
@@ -95,9 +116,17 @@ class NetscopeApp(App):
     # ==========================================
     @work(exclusive=True, thread=True)
     def live_monitor(self):
+        """
+        Background worker thread for passive packet sniffing.
+        Listens to network traffic continuously without storing it in memory.
+        """
         sniff(prn=self.analyze_packet, store=False)
 
     def analyze_packet(self, packet):
+        """
+        Callback function for the packet sniffer.
+        Analyzes individual packets for anomalies like TCP SYN port scans.
+        """
         if packet.haslayer(TCP):
             if packet[TCP].flags == "S":  # S: Sync
                 self.trace_log.write(
@@ -105,6 +134,7 @@ class NetscopeApp(App):
                 )
 
     def compose(self) -> ComposeResult:
+        """Construct the UI layout and define the widgets."""
         yield Header()
 
         self.device_table = DataTable(id="sidebar")
@@ -117,6 +147,7 @@ class NetscopeApp(App):
         yield Footer()
 
     def on_mount(self) -> None:
+        """Trigger background network tasks when the app UI is fully mounted."""
         self.device_table.add_columns("IP Address", "MAC Address")
 
         self.run_scan()
@@ -127,6 +158,7 @@ class NetscopeApp(App):
 
 @app.command()
 def ui():
+    """Launch the interactive terminal dashboard."""
     ui_app = NetscopeApp()
     ui_app.run()
 
